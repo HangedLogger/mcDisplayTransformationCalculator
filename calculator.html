@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>DisplayTransformationCalculator</title>
+<link href="/calculator.css" rel="stylesheet" />
+<script src="https://unpkg.com/three@0.146.0/build/three.min.js"></script>
+<script src="./show.js"></script>
+</head>
+<body>
+
+<h1>Mincraft Transformation Calculator</h1>
+
+<canvas id="myCanvas"></canvas>
+
+<h2>Rotation</h2>
+<p><label>Yaw:   <input type="number" id="yaw_box" value="0" size="5" min="-180" max="180" step="5">° <input type="range" id="yaw_slide" value="0" min="-180" max="180" step="1" style="width:300px;"></label></p>
+<p><label>Pitch: <input type="number" id="pitch_box" value="0" size="5" min="-180" max="180" step="5">° <input type="range" id="pitch_slide" value="0" min="-180" max="180" step="1" style="width:300px;"></label></p>
+
+<h2>Translation</h2>
+<p><label>X: <input type="number" id="trans_x_box" size="5" value="0" step="0.5"></label></p>
+<p><label>Y: <input type="number" id="trans_y_box" size="5" value="0" step="0.5"></label></p>
+<p><label>Z: <input type="number" id="trans_z_box" size="5" value="0" step="0.5"></label></p>
+
+<h2>Scale</h2>
+<p><label>X: <input type="number" id="scale_x_box" size="5" value="1" step="0.5"></label></p>
+<p><label>Y: <input type="number" id="scale_y_box" size="5" value="1" step="0.5"></label></p>
+<p><label>Z: <input type="number" id="scale_z_box" size="5" value="1" step="0.5"></label></p>
+
+<input type="button" id="runButton" value="計算" >
+
+<p><label>Output:</label></p>
+<p><textarea id="outputText" cols="50" rows="10" wrap="soft"></textarea></p>
+
+<script src="./main.js"></script>
+
+</body>
+</html>
