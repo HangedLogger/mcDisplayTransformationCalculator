@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>DisplayTransformationCalculator</title>
+<link href="/calculator.css" rel="stylesheet" />
+<!-- <script src="https://unpkg.com/three@0.146.0/build/three.min.js"></script>
+<script src="./show.js"></script> -->
+</head>
+<body>
+
+    <p>version: alpha1.0.0</p>
+    <h4>説明</h4>
+    <p>- block display や item display の transformation を計算します。</p>
+    <p>- バグ、UIは少しずつ修正していきます。</p>
+    <h4>確認されたバグ</h4>
+    <p>- スケールを変更した際、実際と異なる形で表示される。</p>
+    
+    <script src="https://unpkg.com/three@0.146.0/build/three.min.js"></script>
+    <script>
+    window.onload = () => {
+        init()
+    }
+    
+    function init() {
+    
+    const width = 400;
+    const height = 400;
+    
+    let yaw = document.getElementById('yaw_box');
+    let pitch = document.getElementById('pitch_box');
+    let trans_x = document.getElementById('trans_x_box');
+    let trans_y = document.getElementById('trans_y_box');
+    let trans_z = document.getElementById('trans_z_box');
+    let scale_x = document.getElementById('scale_x_box');
+    let scale_y = document.getElementById('scale_y_box');
+    let scale_z = document.getElementById('scale_z_box');
+    
+    const renderer = new THREE.WebGLRenderer({
+        canvas: document.querySelector('#myCanvas')
+    });
+    renderer.setSize(width, height);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color( 0xEFEFEF );
+    scene.add(new THREE.GridHelper(501, 501));
+    scene.add(new THREE.AxesHelper(500));
+    
+    const camera = new THREE.PerspectiveCamera(45, width / height, 1, 10000);
+    camera.position.set(6, 6, 6);
+    camera.lookAt(new THREE.Vector3(0, 0, 0));
+    
+    const geometry = new THREE.BoxGeometry(1, 1, 1, 1, 1, 1);
+
+    var out = geometry.getAttribute('position');
+    console.log(out);
+
+    const material = [
+        new THREE.MeshLambertMaterial({color:0xF49C50,opacity:0.9,transparent:true}),
+        new THREE.MeshLambertMaterial({color:0xC87736,opacity:0.9,transparent:true}),
+        new THREE.MeshLambertMaterial({color:0x7FFF80,opacity:0.9,transparent:true}),
+        new THREE.MeshLambertMaterial({color:0x407F40,opacity:0.9,transparent:true}),
+        new THREE.MeshLambertMaterial({color:0x8080FF,opacity:0.9,transparent:true}),
+        new THREE.MeshLambertMaterial({color:0x40407F,opacity:0.9,transparent:true})
+    ];
+    // 8080FF, 40407F
+    // F49C50, C87736
+    // 7FFF80, 407F40
+    
+    const box = new THREE.Mesh(geometry, material);
+    scene.add(box);
+    
+    
+    const light = new THREE.AmbientLight(0xFFFFFF, 1);
+    scene.add(light);
+    
+    tick();
+    
+    function tick() {
+        requestAnimationFrame(tick);
+    
+        box.scale.set(scale_x.value,scale_y.value,scale_z.value);
+        box.position.x = Number(trans_x.value)
+        box.position.y = Number(trans_y.value)
+        box.position.z = Number(trans_z.value)
+        box.rotation.y = 0.0 - Number(yaw.value) * 2 * Math.PI / 360;
+        box.rotation.z = 0.0 - Number(pitch.value) * 2 * Math.PI / 360;
+    
+        renderer.render(scene, camera);
+    }
+    }
+    </script>
+    
+    <center><canvas id="myCanvas"></canvas></center>
+    
+    <h2>Rotation</h2>
+    
+    <p>　ヨー: <input type="number" id="yaw_box" value="0" size="5" min="-180" max="180" step="5">° <input type="range" id="yaw_slide" value="0" min="-180" max="180" step="1" style="width:300px;"></p>
+    <p>ピッチ: <input type="number" id="pitch_box" value="0" size="5" min="-180" max="180" step="5">° <input type="range" id="pitch_slide" value="0" min="-180" max="180" step="1" style="width:300px;"></p>
+    
+    <h2>Translation</h2>
+    <p>
+    X: <input type="number" id="trans_x_box" value="0" step="0.5" style="width:40px;">
+    Y: <input type="number" id="trans_y_box" value="0" step="0.5"  style="width:40px;">
+    Z: <input type="number" id="trans_z_box" value="0" step="0.5"  style="width:40px;">
+    </p>
+    
+    <h2>Scale</h2>
+    <p>
+    X: <input type="number" id="scale_x_box" value="1" step="0.5" style="width:40px;">
+    Y: <input type="number" id="scale_y_box" value="1" step="0.5" style="width:40px;">
+    Z: <input type="number" id="scale_z_box" value="1" step="0.5" style="width:40px;">
+    </p>
+    
+    <input type="button" id="runButton" value="計算" >
+    
+    <p><label>Output:</label></p>
+    <p><textarea id="outputText" cols="50" rows="10" wrap="soft"></textarea></p>
+    
+    <script>
+    
+    function run(){
+        const pi = Math.PI
+        var theta1 = 0.0 - Number(yaw_box.value) * 2 * pi / 360;
+        var theta2 = 0.0 - Number(pitch_box.value) * 2 * pi / 360;
+    
+        var a1 = Math.cos(theta1/2);
+        var b1 = 0.;
+        var c1 = 0.;
+        var d1 = Math.sin(theta1/2);
+    
+        var a2 = Math.cos(theta2/2);
+        var b2 = Math.sin(theta1)*Math.sin(theta2/2);
+        var c2 = 0.0 - Math.sin(theta1)*Math.sin(theta2/2);
+        var d2 = 0.;
+    
+        var x = a1*b2 + b1*a2 + c1*d2 - d1*c2;
+        var y = a1*c2 - b1*d2 + c1*a2 + d1*b2;
+        var z = a1*d2 + b1*c2 - c1*b2 + d1*a2;
+        var w = a1*a2 - b1*b2 - c1*c2 - d1*d2;
+        
+        var x_out = y.toFixed(4).toString();
+        var y_out = z.toFixed(4).toString();
+        var z_out = x.toFixed(4).toString();
+        var w_out = w.toFixed(4).toString();
+    
+        var leftRotation = '[0.0000f,0.0000f,0.0000f,1.0000f]';
+        var rightRotation = '[' + x_out + 'f,' + y_out + 'f,' + z_out + 'f,' + w_out + 'f' + ']';
+        var translation = '[' + trans_x.value + 'f,' + trans_y.value + 'f,' + trans_z.value + 'f' + ']';
+        var scale = '[' + scale_x.value + 'f,' + scale_y.value + 'f,' + scale_z.value + 'f' + ']';
+        outputText.value = '{left_rotation:' + leftRotation + ',right_rotation:' + rightRotation + ',translation:' + translation + ',scale:' + scale + '}'
+    }
+    
+    function setYawSlideVal(){
+        var yaw = Number(yaw_box.value);
+    
+        while ( yaw > 180 ){
+            yaw -= 360;
+        }
+        while ( yaw < -180 ){
+            yaw += 360;
+        }
+    
+        yaw_box.value = yaw.toString();
+        yaw_slide.value = yaw.toString();
+    }
+    function setYawBoxVal(){
+        yaw_box.value = yaw_slide.value;
+    }
+    
+    function setPitchSlideVal(){
+        var pitch = Number(pitch_box.value);
+    
+        while ( pitch > 180 ){
+            pitch -= 360;
+        }
+        while ( pitch < -180 ){
+            pitch += 360;
+        }
+    
+        pitch_box.value = pitch.toString();
+        pitch_slide.value = pitch.toString();
+    }
+    
+    function setPitchBoxVal(){
+        pitch_box.value = pitch_slide.value;
+    }
+    
+    let yaw_box = document.getElementById('yaw_box');
+    let yaw_slide = document.getElementById('yaw_slide');
+    let pitch = document.getElementById('pitch');
+    let outputText = document.getElementById('outputText');
+    
+    let trans_x = document.getElementById('trans_x_box');
+    let trans_y = document.getElementById('trans_y_box');
+    let trans_z = document.getElementById('trans_z_box');
+    
+    let scale_x = document.getElementById('scale_x_box');
+    let scale_y = document.getElementById('scale_y_box');
+    let scale_z = document.getElementById('scale_z_box');
+    
+    let runButton = document.getElementById('runButton');
+    
+    runButton.addEventListener('click', run);
+    yaw_box.addEventListener('change', setYawSlideVal);
+    yaw_slide.addEventListener('change', setYawBoxVal);
+    pitch_box.addEventListener('change', setPitchSlideVal);
+    pitch_slide.addEventListener('change', setPitchBoxVal);
+    </script>
+
+</body>
+</html>
