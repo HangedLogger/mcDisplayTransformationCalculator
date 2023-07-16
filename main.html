@@ -9,7 +9,7 @@
 </head>
 <body>
 
-    <p>version: alpha1.0.0</p>
+    <p>version: alpha1.1.0</p>
     <h4>説明</h4>
     <p>- block display や item display の transformation を計算します。</p>
     <p>- バグ、UIは少しずつ修正していきます。</p>
@@ -57,12 +57,12 @@
     console.log(out);
 
     const material = [
-        new THREE.MeshLambertMaterial({color:0xF49C50,opacity:0.9,transparent:true}),
-        new THREE.MeshLambertMaterial({color:0xC87736,opacity:0.9,transparent:true}),
+        new THREE.MeshLambertMaterial({color:0x8080FF,opacity:0.9,transparent:true}),
+        new THREE.MeshLambertMaterial({color:0x40407F,opacity:0.9,transparent:true}),
         new THREE.MeshLambertMaterial({color:0x7FFF80,opacity:0.9,transparent:true}),
         new THREE.MeshLambertMaterial({color:0x407F40,opacity:0.9,transparent:true}),
-        new THREE.MeshLambertMaterial({color:0x8080FF,opacity:0.9,transparent:true}),
-        new THREE.MeshLambertMaterial({color:0x40407F,opacity:0.9,transparent:true})
+        new THREE.MeshLambertMaterial({color:0xF49C50,opacity:0.9,transparent:true}),
+        new THREE.MeshLambertMaterial({color:0xC87736,opacity:0.9,transparent:true})
     ];
     // 8080FF, 40407F
     // F49C50, C87736
@@ -84,7 +84,7 @@
         box.position.x = Number(trans_x.value)
         box.position.y = Number(trans_y.value)
         box.position.z = Number(trans_z.value)
-        box.rotation.y = 0.0 - Number(yaw.value) * 2 * Math.PI / 360;
+        box.rotation.y = 0.0 - Number(yaw.value-90) * 2 * Math.PI / 360;
         box.rotation.z = 0.0 - Number(pitch.value) * 2 * Math.PI / 360;
     
         renderer.render(scene, camera);
@@ -93,6 +93,8 @@
     </script>
     
     <center><canvas id="myCanvas"></canvas></center>
+
+    <p>赤:x軸 緑:y軸 青:z軸</p> 
     
     <h2>Rotation</h2>
     
@@ -115,26 +117,41 @@
     
     <input type="button" id="runButton" value="計算" >
     
-    <p><label>Output:</label></p>
-    <p><textarea id="outputText" cols="50" rows="10" wrap="soft"></textarea></p>
-    
+    <p><label>出力:</label></p>
+    <p><textarea id="outputText" cols="50" rows="5" wrap="soft"></textarea></p>
+
+    <p><label>ItemDisplay:</label></p>
+    <p><textarea id="outputIDText" cols="50" rows="5" wrap="soft"></textarea></p>
+
+    <p><label>BlockDisplay:</label></p>
+    <p><textarea id="outputBDText" cols="50" rows="5" wrap="soft"></textarea></p>
+
     <script>
     
     function run(){
         const pi = Math.PI
         var theta1 = 0.0 - Number(yaw_box.value) * 2 * pi / 360;
         var theta2 = 0.0 - Number(pitch_box.value) * 2 * pi / 360;
+
     
         var a1 = Math.cos(theta1/2);
         var b1 = 0.;
         var c1 = 0.;
         var d1 = Math.sin(theta1/2);
     
+        // var a2 = Math.cos(theta2/2);
+        // var b2 = Math.sin(theta1)*Math.sin(theta2/2);
+        // var c2 = 0.0 - Math.cos(theta1)*Math.sin(theta2/2);
+        // var d2 = 0.;
+
         var a2 = Math.cos(theta2/2);
-        var b2 = Math.sin(theta1)*Math.sin(theta2/2);
-        var c2 = 0.0 - Math.sin(theta1)*Math.sin(theta2/2);
+        var b2 = 0.;
+        var c2 = Math.sin(theta2/2);
         var d2 = 0.;
-    
+
+        console.log(a1,b1,c1,d1)
+        console.log(a2,b2,c2,d2)
+
         var x = a1*b2 + b1*a2 + c1*d2 - d1*c2;
         var y = a1*c2 - b1*d2 + c1*a2 + d1*b2;
         var z = a1*d2 + b1*c2 - c1*b2 + d1*a2;
@@ -145,11 +162,23 @@
         var z_out = x.toFixed(4).toString();
         var w_out = w.toFixed(4).toString();
     
-        var leftRotation = '[0.0000f,0.0000f,0.0000f,1.0000f]';
-        var rightRotation = '[' + x_out + 'f,' + y_out + 'f,' + z_out + 'f,' + w_out + 'f' + ']';
+        var leftRotation = '[' + c1.toFixed(4).toString() + 'f,' + d1.toFixed(4).toString() + 'f,' + b1.toFixed(4).toString() + 'f,' + a1.toFixed(4).toString() + 'f' + ']';
+        var rightRotation = '[' + c2.toFixed(4).toString() + 'f,' + d2.toFixed(4).toString() + 'f,' + b2.toFixed(4).toString() + 'f,' + a2.toFixed(4).toString() + 'f' + ']';
         var translation = '[' + trans_x.value + 'f,' + trans_y.value + 'f,' + trans_z.value + 'f' + ']';
         var scale = '[' + scale_x.value + 'f,' + scale_y.value + 'f,' + scale_z.value + 'f' + ']';
-        outputText.value = '{left_rotation:' + leftRotation + ',right_rotation:' + rightRotation + ',translation:' + translation + ',scale:' + scale + '}'
+
+        var output_ID = '{left_rotation:' + leftRotation + ',right_rotation:' + rightRotation + ',translation:' + translation + ',scale:' + scale + '}';
+
+        var trans_x_out = Number(trans_x.value) - Number(scale_x.value) / 2
+        var trans_y_out = Number(trans_y.value) - Number(scale_y.value) / 2
+        var trans_z_out = Number(trans_z.value) - Number(scale_z.value) / 2
+        translation = '[' + trans_x_out.toString() + 'f,' + trans_y_out.toString() + 'f,' + trans_z_out.toString() + 'f' + ']';
+        var output_BD = '{left_rotation:' + leftRotation + ',right_rotation:' + rightRotation + ',translation:' + translation + ',scale:' + scale + '}';
+
+        outputText.value = output_ID
+        outputIDText.value = '/summon item_display ~ ~0.5 ~ {item:{id:"minecraft:diamond_sword",Count:1b},transformation:' + output_ID + '}'
+        outputBDText.value = '/summon block_display ~ ~ ~ {block_state:{Name:"minecraft:lectern"},transformation:' + output_ID + '}'
+
     }
     
     function setYawSlideVal(){
@@ -190,7 +219,6 @@
     let yaw_box = document.getElementById('yaw_box');
     let yaw_slide = document.getElementById('yaw_slide');
     let pitch = document.getElementById('pitch');
-    let outputText = document.getElementById('outputText');
     
     let trans_x = document.getElementById('trans_x_box');
     let trans_y = document.getElementById('trans_y_box');
@@ -199,6 +227,10 @@
     let scale_x = document.getElementById('scale_x_box');
     let scale_y = document.getElementById('scale_y_box');
     let scale_z = document.getElementById('scale_z_box');
+
+    let outputText = document.getElementById('outputText');
+    let outputBDText = document.getElementById('outputBDText');
+    let outputIDText = document.getElementById('outputIDText');
     
     let runButton = document.getElementById('runButton');
     
