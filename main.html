@@ -9,12 +9,9 @@
 </head>
 <body>
 
-<p>version: alpha1.2.0</p>
+<p>version: alpha1.2.1</p>
 <h4>説明</h4>
 <p>- block display や item display の transformation を計算します。</p>
-<p>- バグ、UIは少しずつ修正していきます。</p>
-<h4>確認されたバグ</h4>
-<p>- スケールを変更した際、実際と異なる形で表示される。</p>
 
 <script src="https://unpkg.com/three@0.146.0/build/three.min.js"></script>
 <script>
@@ -53,10 +50,16 @@ const camera = new THREE.PerspectiveCamera(45, width / height, 1, 10000);
 camera.position.set(6, 6, 6);
 camera.lookAt(new THREE.Vector3(0, 0, 0));
 
-const geometry = new THREE.BoxGeometry(1, 1, 1, 1, 1, 1);
+const geometry = new THREE.BoxBufferGeometry(1, 1, 1, 1, 1, 1);
 
-var out = geometry.getAttribute('position');
-console.log(out);
+var vertices = geometry.getAttribute('position').array;
+var indices = geometry.getIndex().array;
+var vertexs = [[-0.5,-0.5,-0.5],[-0.5,-0.5,0.5],[-0.5,0.5,-0.5],[-0.5,0.5,0.5],[0.5,-0.5,-0.5],[0.5,-0.5,0.5],[0.5,0.5,-0.5],[0.5,0.5,0.5]]
+var vertexs_id = [[6,14,23],[7,12,18],[4,8,21],[5,10,16],[3,15,22],[2,13,19],[1,9,20],[0,11,17]]
+
+// for ( var i = 0; i < 24; i++ ){
+//     console.log(i,vertices[3*i],vertices[3*i+1],vertices[3*i+2]);
+// }
 
 const material = [
 new THREE.MeshLambertMaterial({color:0xF49C50,opacity:0.9,transparent:true}),
@@ -83,13 +86,12 @@ tick();
 function tick() {
 requestAnimationFrame(tick);
 
-block.scale.set(scale_x.value,scale_y.value,scale_z.value);
-block.position.x = Number(trans_x.value)
-block.position.y = Number(trans_y.value)
-block.position.z = Number(trans_z.value)
+// block.scale.set(scale_x.value,scale_y.value,scale_z.value);
+block.position.set(Number(trans_x.value),Number(trans_y.value),Number(trans_z.value));
 
-q1 = new THREE.Quaternion();
-q2 = new THREE.Quaternion();
+var q1 = new THREE.Quaternion();
+var q1_inv = new THREE.Quaternion();
+var q2 = new THREE.Quaternion();
 
 var axis = new THREE.Vector3(0,0,1).normalize();
 var angle = 0.0 - Number(roll.value) * 2 * Math.PI / 360;
@@ -105,7 +107,29 @@ var angle = 0.0 - Number(pitch.value) * 2 * Math.PI / 360;
 q2.setFromAxisAngle(axis,angle);
 q1.multiply(q2);
 
-block.quaternion.copy(q1);
+// q1_inv = q1.invert();
+q1_inv.copy(q1);
+q1_inv.invert();
+
+for ( var i = 0; i < 8; i++ ){
+    var v = new THREE.Quaternion(vertexs[i][0],vertexs[i][1],vertexs[i][2],0);
+    var v_out = new THREE.Quaternion();
+    v_out.copy(q1);
+    v_out.multiply(v).multiply(q1_inv);
+    // console.log(v_out);
+
+    for ( var j = 0; j < 3; j++ ){
+        var k = vertexs_id[i][j];
+        vertices[3*k] = v_out.x * scale_x.value;
+        vertices[3*k+1] = v_out.y * scale_y.value;
+        vertices[3*k+2] = v_out.z * scale_z.value;
+    }
+}
+
+geometry.setAttribute( 'position', new THREE.BufferAttribute( vertices, 3 ) );
+
+
+// block.quaternion.copy(q1);
 
 renderer.render(scene, camera);
 }
@@ -150,6 +174,10 @@ Z: <input type="number" id="scale_z_box" value="1" step="0.5" style="width:40px;
 <script>
 
 function run(){
+
+var q1 = new THREE.Quaternion();
+var q2 = new THREE.Quaternion();
+
 var axis = new THREE.Vector3(0,0,1).normalize();
 var angle = 0.0 - Number(roll.value) * 2 * Math.PI / 360;
 q1.setFromAxisAngle(axis,angle);
